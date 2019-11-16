@@ -71,7 +71,7 @@ x_train, y_train, x_test, y_test = pickle.load(open(config.data_encoded_file, 'r
 
 # Model0: Random Embedding -> BiLSTM -> CRF
 nerbilstm = NerBiLSTM(config)
-model = nerbilstm.create_model()
+model = nerbilstm.model
 plot_model(model, to_file=nerbilstm.name + '.png', show_shapes=True)
 
 model.compile(Adam(1e-2), loss=crf_loss, metrics=[crf_accuracy])
@@ -90,7 +90,7 @@ history = model.fit(x_train, y_train, batch_size=16, epochs=5, validation_data=(
 
 # Model1: Random Embedding -> BiLSTMs -> TD(Dense) -> CRF
 nerbilstmstd = NerBiLSTMsTD(config)
-model = nerbilstmstd.create_model()
+model = nerbilstmstd.model
 model.compile('rmsprop', loss=crf_loss, metrics=[crf_accuracy])
 history = model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_test, y_test))
 
@@ -98,7 +98,7 @@ history = model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(
 
 # Model2: Random Embedding -> Concatenate(BiLSTM, Conv1D -> TD(Dense)) -> TD(Dense) -> CRF
 nerbilstmconvtd = NerBiLSTMConvTD(config)
-model = nerbilstmconvtd.create_model()
+model = nerbilstmconvtd.model
 model.compile(optimizer='adam', loss=crf_loss, metrics=[crf_accuracy])
 history = model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_test, y_test))
 
@@ -106,7 +106,7 @@ history = model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(
 
 # Model3: BERT -> BiLSTM -> CRF
 nerbertbilstm = NerBertBiLSTM(config)
-model = nerbertbilstm.create_model()
+model = nerbertbilstm.model
 model.compile(optimizer=Adam(1e-4), loss=crf_loss, metrics=[crf_accuracy])
 
 

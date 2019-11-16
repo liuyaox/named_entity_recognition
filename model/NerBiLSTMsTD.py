@@ -16,9 +16,10 @@ class NerBiLSTMsTD:
     参考: <http://www.voidcn.com/article/p-pykfinyn-bro.html>
     """
     def __init__(self, config, rnn_units=128):
+        self.name = 'NerBiLSTMsTD'
         self.config = config
         self.RNN_UNITS = rnn_units if rnn_units else config.RNN_UNITS
-        self.name = 'NerBiLSTMsTD'
+        self.create_model()
         
         
     def create_model(self):
@@ -30,6 +31,5 @@ class NerBiLSTMsTD:
         X = Dropout(0.3)(X)
         X = TimeDistributed(Dense(self.config.N_TAGS))(X)                           # (, MAXLEN, N_TAGS)
         out = CRF(self.config.N_TAGS, sparse_target=True, name='crf')(X)            # (, MAXLEN, N_TAGS)
-        model = Model(inputs=inputs, outputs=out)
-        model.summary()
-        return model
+        self.model = Model(inputs=inputs, outputs=out)
+        self.model.summary()

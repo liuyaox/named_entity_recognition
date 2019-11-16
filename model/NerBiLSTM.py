@@ -15,9 +15,10 @@ class NerBiLSTM:
     Model: Random Embedding -> BiLSTM -> CRF
     """
     def __init__(self, config, rnn_units=128):
+        self.name = 'NerBiLSTM'
         self.config = config
         self.RNN_UNITS = rnn_units if rnn_units else config.RNN_UNITS
-        self.name = 'NerBiLSTM'
+        self.create_model()
         
         
     def create_model(self):
@@ -26,6 +27,5 @@ class NerBiLSTM:
         X = Bidirectional(LSTM(self.RNN_UNITS // 2, return_sequences=True))(X)      # (, MAXLEN, RNN_UNITS)
         X = Dropout(0.3)(X)
         out = CRF(self.config.N_TAGS, sparse_target=True, name='crf')(X)            # (, MAXLEN, N_TAGS)  # TODO sparse_target=True/False???
-        model = Model(inputs=inputs, outputs=out)
-        model.summary()
-        return model
+        self.model = Model(inputs=inputs, outputs=out)
+        self.model.summary()

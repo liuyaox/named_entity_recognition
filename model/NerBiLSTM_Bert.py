@@ -11,13 +11,13 @@ from keras_contrib.layers import CRF
 from keras_bert import load_trained_model_from_checkpoint
 
 
-class NerBertBiLSTM:
+class NerBiLSTM_Bert:
     """
     Model: BERT -> BiLSTM -> CRF
     参考: <https://github.com/UmasouTTT/keras_bert_ner/blob/master/Model/BertBilstmCrf.py>
     """
     def __init__(self, config, rnn_units=128):
-        self.name = 'NerBertBiLSTM'
+        self.name = 'NerBiLSTM_Bert'
         self.config = config
         self.RNN_UNITS = rnn_units if rnn_units else config.RNN_UNITS
         self.bert = load_trained_model_from_checkpoint(

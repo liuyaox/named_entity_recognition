@@ -6,10 +6,9 @@ Descritipn:
 """
 
 import argparse
-import os
-
 
 # 设置多GPU
+#import os
 #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
 

@@ -29,7 +29,7 @@ class NerBiLSTMConvTD:
     def create_model(self):
         # 输入：Input -> Embedding
         inputs = Input(shape=(self.config.MAXLEN,), dtype='int32', name='word_input')   # (, MAXLEN)
-        X = Embedding(self.config.VOCAB_SIZE, self.config.WORD_EMBED_DIM)(inputs)       # (, MAXLEN, WORD_EMBED_DIM)
+        X = Embedding(self.config.VOCAB_SIZE, self.config.WORD_EMBED_DIM, mask_zero=True)(inputs)       # (, MAXLEN, WORD_EMBED_DIM)
         X = SpatialDropout1D(0.2)(X)
         
         # 分支1：-> BiLSTM => X1

@@ -19,7 +19,7 @@ from keras_bert import Tokenizer
 
 from model.NerBiLSTM import NerBiLSTM
 from model.NerBiLSTMsTD import NerBiLSTMsTD
-from model.NerBertBiLSTM import NerBertBiLSTM
+from model.NerBiLSTM_Bert import NerBiLSTM_Bert
 from model.NerBiLSTMConvTD import NerBiLSTMConvTD
 from Config import Config
 config = Config()
@@ -33,14 +33,15 @@ def data_parsing(data_file):
     data = [[row.split() for row in sample.split('\n')] for sample in samples]
     return data
 
+
 def data_encoding(data, word2idx, tags, maxlen):
-    """数据编码"""
-    x = [[word2idx.get(str(w[0]).lower(), 1) for w in sample] for sample in data]
-    x = pad_sequences(x, maxlen)
-    y = [[tags.index(w[1]) for w in sample] for sample in data]
-    y = pad_sequences(y, maxlen, value=-1)
-    y = expand_dims(y, 2)
-    return x, y
+    """数据编码  Y直接使用indices而非one-hot"""
+    X = [[word2idx.get(str(w[0]).lower(), 1) for w in sample] for sample in data]
+    X = pad_sequences(X, maxlen)
+    Y = [[tags.index(w[1]) + 1 for w in sample] for sample in data]     # indices从1开始，以防与mask_value=0冲突
+    Y = pad_sequences(Y, maxlen)    # X与Y的mask_value应该一致，因为貌似源代码里处理Y时使用的是处理X的那个mask
+    Y = expand_dims(Y, 2)           # (, maxlen) --> (, maxlen, 1)  与CRF输出的shape一致
+    return X, Y
 
 
 def data_config_processing():
@@ -105,7 +106,7 @@ history = model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(
 
 
 # Model3: BERT -> BiLSTM -> CRF
-nerbertbilstm = NerBertBiLSTM(config)
+nerbertbilstm = NerBiLSTM_Bert(config)
 model = nerbertbilstm.model
 model.compile(optimizer=Adam(1e-4), loss=crf_loss, metrics=[crf_accuracy])
 

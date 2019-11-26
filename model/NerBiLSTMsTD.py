@@ -24,7 +24,7 @@ class NerBiLSTMsTD:
         
     def create_model(self):
         inputs = Input(shape=(self.config.MAXLEN, ), dtype='int32', name='inputs')  # (, MAXLEN)
-        X = Embedding(self.config.VOCAB_SIZE, self.config.WORD_EMBED_DIM)(inputs)   # (, MAXLEN, WORD_EMBED_DIM)
+        X = Embedding(self.config.VOCAB_SIZE, self.config.WORD_EMBED_DIM, mask_zero=True)(inputs)   # (, MAXLEN, WORD_EMBED_DIM)
         X = Bidirectional(LSTM(self.RNN_UNITS // 2, return_sequences=True))(X)      # (, MAXLEN, RNN_UNITS)
         X = Dropout(0.3)(X)
         X = Bidirectional(LSTM(self.RNN_UNITS // 2, return_sequences=True))(X)      # (, MAXLEN, RNN_UNITS)

@@ -7,6 +7,7 @@ Descritipn:
 
 import argparse
 
+
 # 设置多GPU
 #import os
 #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -18,9 +19,9 @@ class Config(object):
     def __init__(self):
         
         # Basic
-        self.token_level = 'char'       # word: word粒度  char: char粒度  both: word+char粒度
+        self.token_level = 'char'           # word: word粒度  char: char粒度  both: word+char粒度
         self.TAGS = ['O', 'B-PER', 'I-PER', 'B-LOC', 'I-LOC', "B-ORG", "I-ORG"]
-        self.N_TAGS = len(self.TAGS)
+        self.N_TAGS = len(self.TAGS) + 1    # 也要加上用于Y的masking_value=0 ？？？
         self.train_file = './data/train_data.txt'
         self.test_file = './data/test_data.txt'
         

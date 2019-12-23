@@ -4,23 +4,16 @@ Created:    2019-11-13 18:37:52
 Author:     liuyao8
 Descritipn: 
 """
-
-from numpy import expand_dims
 import pickle
-
-from keras.optimizers import Adam
-from keras.preprocessing.sequence import pad_sequences
 from keras.utils import plot_model
-
+from keras.optimizers import Adam
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_accuracy
-from keras_bert import Tokenizer
 
+from model.NerBiLSTMBert import NerBiLSTMBert
 from model.NerBiLSTM import NerBiLSTM
 from model.NerBiLSTMsTD import NerBiLSTMsTD
-from model.NerBiLSTM_Bert import NerBiLSTM_Bert
 from model.NerBiLSTMConvTD import NerBiLSTMConvTD
-
 
 
 
@@ -28,11 +21,26 @@ if __name__ == '__main__':
 
     from Config import Config
     config = Config()
-    
     config = pickle.load(open(config.config_file, 'rb'))
+    # config.N_TAGS += 1
+    
+    
+    # 1. Bert
+    x_train, y_train, x_test, y_test = pickle.load(open(config.data_encoded_bert_file, 'rb'))
+    
+    nerbilstmbert = NerBiLSTMBert(config)
+    plot_model(nerbilstmbert.model, to_file=nerbilstmbert.name + '.png', show_shapes=True)
+    nerbilstmbert.model_train(x_train, y_train, lr=1e-2, batch_size=32, epochs=2)
+    nerbilstmbert.model_train(x_train, y_train, lr=1e-3, batch_size=32, epochs=3)
+    nerbilstmbert.model_train(x_train, y_train, lr=1e-4, batch_size=32, epochs=3)
+    nerbilstmbert.model.evaluate(x_test, y_test)
+
+    sentence = 'xxxxxx'
+    tags = nerbilstmbert.model_predict(sentence, dp)
+
+    
+    # 2. 非Bert
     x_train, y_train, x_test, y_test = pickle.load(open(config.data_encoded_file, 'rb'))
-
-
 
     # Model0: Random Embedding -> BiLSTM -> CRF
     nerbilstm = NerBiLSTM(config)
@@ -52,13 +60,11 @@ if __name__ == '__main__':
     history = model.fit(x_train, y_train, batch_size=16, epochs=5, validation_data=(x_test, y_test))
 
 
-
     # Model1: Random Embedding -> BiLSTMs -> TD(Dense) -> CRF
     nerbilstmstd = NerBiLSTMsTD(config)
     model = nerbilstmstd.model
     model.compile('rmsprop', loss=crf_loss, metrics=[crf_accuracy])
     history = model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_test, y_test))
-
 
 
     # Model2: Random Embedding -> Concatenate(BiLSTM, Conv1D -> TD(Dense)) -> TD(Dense) -> CRF
@@ -68,38 +74,10 @@ if __name__ == '__main__':
     history = model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_test, y_test))
 
 
-
     # Model3: BERT -> BiLSTM -> CRF
     nerbertbilstm = NerBiLSTM_Bert(config)
     model = nerbertbilstm.model
     model.compile(optimizer=Adam(1e-4), loss=crf_loss, metrics=[crf_accuracy])
-
-
-    #预处理输入X
-    def PreProcessInputData(text):
-        tokenizer = Tokenizer(vocab)
-        word_labels = []
-        seq_types = []
-        for sequence in text:
-            code = tokenizer.encode(first=sequence, max_len=config.SEQ_MAXLEN)
-            word_labels.append(code[0])
-            seq_types.append(code[1])
-        return word_labels, seq_types
-
-
-    #预处理输入Y
-    def PreProcessOutputData(text):
-        tags = []
-        for line in text:
-            tag = [0]
-            for item in line:
-                tag.append(int(label[item.strip()]))
-            tag.append(0)
-            tags.append(tag)
-
-        pad_tags = pad_sequences(tags, maxlen=config.SEQ_MAXLEN, padding="post", truncating="post")
-        result_tags = expand_dims(pad_tags, 2)
-        return result_tags
 
 
 

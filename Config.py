@@ -4,7 +4,6 @@ Created:    2019-11-16 13:38:23
 Author:     liuyao8
 Descritipn: 
 """
-
 import argparse
 
 
@@ -21,17 +20,15 @@ class Config(object):
         # Basic
         self.token_level = 'char'           # word: word粒度  char: char粒度  both: word+char粒度
         self.TAGS = ['O', 'B-PER', 'I-PER', 'B-LOC', 'I-LOC', "B-ORG", "I-ORG"]
-        self.N_TAGS = len(self.TAGS) + 1    # 也要加上用于Y的masking_value=0 ？？？
+        self.N_TAGS = len(self.TAGS)        # 暂时不加上用于Y的masking_value=0 ？？？需要时，手动修改
         self.train_file = './data/train_data.txt'
         self.test_file = './data/test_data.txt'
         
         
         # Data Preprocessing
-        self.MAXLEN = 100
-        self.WORD_MAXLEN = 100      # 57
-        self.CHAR_MAXLEN = 200      # 126
-        self.SENT_MAXLEN = 50       # 18
-        self.data_encoded_file = './local/data_encoded.pkl'     # 向量化编码后的训练数据
+        self.SEQ_MAXLEN = 80
+        self.data_encoded_file = './local/data_encoded.pkl'             # 向量化编码后的训练数据
+        self.data_encoded_bert_file = './local/data_encoded_bert.pkl'   # 向量化编码后的训练数据 for BERT
         
         
         # Embedding
@@ -44,10 +41,11 @@ class Config(object):
         
         
         # Bert
-        self.SEQ_MAXLEN = 80     # ?
-        self.bert_model_path = '/home/liuyao58/data/BERT/chinese_L-12_H-768_A-12/'
-        self.bert_dim = 768     # ?
-        self.bert_graph_tmpfile = './tmp_graph_xxx'
+        self.bert_path = '/home/liuyao58/data/BERT/chinese_L-12_H-768_A-12/'
+        self.vocab_path = self.bert_path + 'vocab.txt'
+        self.BERT_DIM = 768             # ?
+        self.BERT_RNN_UNITS = 64
+        self.bert_graph_tmpfile = './tmp_graph_xxx' # ?
         
         
         # Vocabulary
@@ -71,6 +69,7 @@ class Config(object):
         self.n_folds = 5
         self.n_epochs = 10
         self.model_file = './local/model.h5'
+        self.model_bert_file = './keras_bert.h5'
 
 
         # Others

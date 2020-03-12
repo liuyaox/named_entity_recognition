@@ -56,7 +56,7 @@ class NerBiLSTMBert:
             layer.trainable = trainable
 
             
-    def model_train(self, x_train, y_train, lr=1e-4, batch_size=32, epochs=10, train_plot=False, model_save=False):
+    def model_train(self, x_train, y_train, lr=1e-4, batch_size=32, epochs=10, train_plot=True, model_save=False):
         '''生成Train和Test，训练模型'''
         self.model.compile(optimizer=Adam(lr), loss=crf_loss, metrics=[crf_accuracy, pre, rec])
         history = self.model.fit(

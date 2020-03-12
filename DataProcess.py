@@ -35,10 +35,10 @@ def data_encoding(data, word2idx, tags, maxlen):
     return X, Y
 
 
-def get_word2idx(data):
+def get_word2idx(data, min_freq):
     '''生成字典和映射字典'''
     word_counts = Counter(row[0].lower() for sample in data for row in sample)  # 基于train
-    vocab = [w for w, f in word_counts.items() if f >= config.MIN_FREQ]         # 以频率排序为id
+    vocab = [w for w, f in word_counts.items() if f >= min_freq]         # 以频率排序为id
     word2idx = {w: i for i, w in enumerate(vocab)}    # TODO 不应该从0和1开始吧？应该从2开始？
     idx2word = {i: w for (w, i) in word2idx.items()}
     return word2idx, idx2word, vocab
@@ -67,26 +67,26 @@ def preprocess_data(path):
 
 class DataProcessForBert:
 
-    def __init__(self, config, seq_maxlen=None, vocab_path=None):
+    def __init__(self, config, seq_maxlen=None, bert_vocab_file=None):
         self.config = config
-        self.seq_maxlen = seq_maxlen if seq_maxlen else config.seq_maxlen
-        vocab_path = vocab_path if vocab_path else config.vocab_path
-        self.load_dict(vocab_path)
+        self.seq_maxlen = seq_maxlen if seq_maxlen else config.SEQ_MAXLEN
+        bert_vocab_file = bert_vocab_file if bert_vocab_file else config.bert_vocab_file
+        self.load_dict(bert_vocab_file)
 
 
-    def load_dict(self, vocab_path):
+    def load_dict(self, bert_vocab_file):
         '''生成Tag字典和BERT字典'''
         # Tag字典
-        self.tag2idx = {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3, 'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6}
+        #           {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3, 'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6}
+        # {'PAD': 0, 'O': 1, 'B-PER': 2, 'I-PER': 3, 'B-LOC': 4, 'I-LOC': 5, 'B-ORG': 6, 'I-ORG': 7}
+        self.tag2idx = {tag: i for i, tag in enumerate(self.config.TAGS)}
         self.idx2tag = {v: k for (k, v) in self.tag2idx.items()}
-        
         # BERT字典
         self.vocab = {}
-        with open(vocab_path, 'r+', encoding='utf-8') as f_vocab:
+        with open(bert_vocab_file, 'r+', encoding='utf-8') as f_vocab:
             for line in f_vocab:
-                self.vocab[line.strip()] = len(self.vocab) 
-        # TODO 不需要从1或2开始吗？0留给padding？UNK是什么id？
-        # 不需要，因为BERT的vocab.txt中已经包含[PAD],[UNK],[CLS],[SEP],[MASK],<S>,<T>这些！尤其[PAD]，就是第1个
+                self.vocab[line.strip()] = len(self.vocab)
+        # TODO 不需要从1或2开始，因为vocab.txt中已经有[PAD],[UNK],[CLS],[SEP],[MASK],<S>,<T>这些！尤其[PAD]，就是第1个
 
         
     def encode_input_x(self, sentences):
@@ -130,7 +130,7 @@ def data_config_processing(config):
     test = data_parsing(config.test_file)
     config.MAXLEN = max(len(sample) for sample in train)   # 100
     
-    word2idx, idx2word, vocab = get_word2idx(train)
+    word2idx, idx2word, vocab = get_word2idx(train, config.MIN_FREQ)
     config.word2idx = word2idx
     config.VOCABSIZE = len(vocab)
     
@@ -143,21 +143,24 @@ def data_config_processing(config):
   
 def data_config_processing_bert(config):
     '''准备好data和config，for BERT'''
-    dp = DataProcess(config)
+    dp = DataProcessForBert(config)
     
-    train_sents, train_tags = preprocess_data(config.train_path)
-    test_sents, test_tags = preprocess_data(config.test_path)
+    train_sents, train_tags = preprocess_data(config.train_file)
+    test_sents, test_tags = preprocess_data(config.test_file)
     x_train, y_train = dp.encode_input_x(train_sents), dp.encode_input_y(train_tags)
     x_test, y_test = dp.encode_input_x(test_sents), dp.encode_input_y(test_tags)
   
     pickle.dump((x_train, y_train, x_test, y_test), open(config.data_encoded_bert_file, 'wb'))
-
+    
     
     
 if __name__ == '__main__':
     
     from Config import Config
     config = Config()
+    
     data_config_processing(config)
+    
+    config.set_pad_same_with_o(False)
     data_config_processing_bert(config)
     

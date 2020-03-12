@@ -10,6 +10,8 @@ from keras.optimizers import Adam
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_accuracy
 
+from utils import pre, rec, print_metrics
+
 from model.NerBiLSTMBert import NerBiLSTMBert
 from model.NerBiLSTM import NerBiLSTM
 from model.NerBiLSTMsTD import NerBiLSTMsTD
@@ -22,22 +24,35 @@ if __name__ == '__main__':
     from Config import Config
     config = Config()
     config = pickle.load(open(config.config_file, 'rb'))
-    # config.N_TAGS += 1
+    config.set_pad_same_with_o(False)
     
     
     # 1. Bert
     x_train, y_train, x_test, y_test = pickle.load(open(config.data_encoded_bert_file, 'rb'))
     
     nerbilstmbert = NerBiLSTMBert(config)
-    plot_model(nerbilstmbert.model, to_file=nerbilstmbert.name + '.png', show_shapes=True)
-    nerbilstmbert.model_train(x_train, y_train, lr=1e-2, batch_size=32, epochs=2)
-    nerbilstmbert.model_train(x_train, y_train, lr=1e-3, batch_size=32, epochs=3)
-    nerbilstmbert.model_train(x_train, y_train, lr=1e-4, batch_size=32, epochs=3)
+
+    nerbilstmbert.model.compile(optimizer=Adam(1e-2), loss=crf_loss, metrics=[crf_accuracy, pre, rec])
+    history1 = nerbilstmbert.model.fit(x=x_train, y=y_train, batch_size=32, epochs=2, validation_split=0.3)
+
+    nerbilstmbert.model.compile(optimizer=Adam(1e-3), loss=crf_loss, metrics=[crf_accuracy, pre, rec])
+    history2 = nerbilstmbert.model.fit(x=x_train, y=y_train, batch_size=32, epochs=2, validation_split=0.3)
+
+    nerbilstmbert.model.compile(optimizer=Adam(1e-4), loss=crf_loss, metrics=[crf_accuracy, pre, rec])
+    history3 = nerbilstmbert.model.fit(x=x_train, y=y_train, batch_size=32, epochs=3, validation_split=0.3)
+
+    nerbilstmbert.model.compile(optimizer=Adam(1e-5), loss=crf_loss, metrics=[crf_accuracy, pre, rec])
+    history4 = nerbilstmbert.model.fit(x=x_train, y=y_train, batch_size=32, epochs=5, validation_split=0.3)
+    
     nerbilstmbert.model.evaluate(x_test, y_test)
+    y_pred = nerbilstmbert.model.predict(x_test)
+    print_metrics(y_test, y_pred)
+
 
     sentence = 'xxxxxx'
     tags = nerbilstmbert.model_predict(sentence, dp)
 
+    
     
     # 2. 非Bert
     x_train, y_train, x_test, y_test = pickle.load(open(config.data_encoded_file, 'rb'))

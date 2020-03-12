@@ -15,20 +15,17 @@ import argparse
 
 class Config(object):
 
-    def __init__(self):
+    def __init__(self, pad_same_with_o=True):
         
         # Basic
         self.token_level = 'char'           # word: word粒度  char: char粒度  both: word+char粒度
-        self.TAGS = ['O', 'B-PER', 'I-PER', 'B-LOC', 'I-LOC', "B-ORG", "I-ORG"]
-        self.N_TAGS = len(self.TAGS)        # 暂时不加上用于Y的masking_value=0 ？？？需要时，手动修改
         self.train_file = './data/train_data.txt'
         self.test_file = './data/test_data.txt'
-        
+        self.set_pad_same_with_o(pad_same_with_o)
         
         # Data Preprocessing
         self.SEQ_MAXLEN = 80
         self.data_encoded_file = './local/data_encoded.pkl'             # 向量化编码后的训练数据
-        self.data_encoded_bert_file = './local/data_encoded_bert.pkl'   # 向量化编码后的训练数据 for BERT
         
         
         # Embedding
@@ -42,7 +39,7 @@ class Config(object):
         
         # Bert
         self.bert_path = '/home/liuyao58/data/BERT/chinese_L-12_H-768_A-12/'
-        self.vocab_path = self.bert_path + 'vocab.txt'
+        self.bert_vocab_file = self.bert_path + 'vocab.txt'
         self.BERT_DIM = 768             # ?
         self.BERT_RNN_UNITS = 64
         self.bert_graph_tmpfile = './tmp_graph_xxx' # ?
@@ -78,6 +75,13 @@ class Config(object):
         self.config_file = './local/config.pkl'     # config文件
 
 
+    def set_pad_same_with_o(self, flag=True):
+        TAGS = ['O', 'B-PER', 'I-PER', 'B-LOC', 'I-LOC', "B-ORG", "I-ORG"]
+        self.TAGS = TAGS if flag else ['PAD'] + TAGS
+        self.N_TAGS = len(self.TAGS)
+        self.data_encoded_bert_file = './local/data_encoded_bert_' + str(self.N_TAGS) + '.pkl'   # 向量化编码后的训练数据 for BERT
+        
+        
 
 def get_args():
     """待完善……"""
